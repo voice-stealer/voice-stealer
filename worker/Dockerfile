@@ -29,5 +29,4 @@ RUN python3 init_downloader.py
 COPY . .
 
 # Set the command to run your application
-# This example assumes you have an `app.py` entry point; adjust as needed
 CMD ["python3", "main.py"]
