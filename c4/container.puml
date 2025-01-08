@@ -1,0 +1,32 @@
+@startuml container
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+
+Person(customer, "Customer")
+
+System_Boundary(system, "Voice-Stealer System") {
+    System_Boundary(k8s, "Kubernetes") {
+        Container(web_app, "Web Application", "Python, Flask", "Allows customers to upload speaker voice and synthesize using it") 
+        Container(kafka, "Topic", "Kafka", "Stores requests from users")
+        Container(worker, "Worker", "Python", "Performs voice synthesis")
+    }
+
+    Container(database, "Database", "PostgreSQL", "Stores data about users, speakers and requests")
+    Container(s3, "Object Storage", "S3", "Stores speakers' voices and synthesized voices")
+
+    Rel_R(web_app, kafka, "Produces requests", "Kafka")
+    Rel_R(kafka, worker, "Consumes requests", "Kafka")
+
+    Rel(web_app, database, "Puts requests and polls requests' statuses")
+    Rel(web_app, s3, "Downloads synthesized voices", "S3")
+    Rel(worker, database, "Updates requests' statuses")
+    Rel(worker, s3, "Uploads synthesized voices", "S3")
+}
+
+Rel(customer, web_app, "Perfoms requests", "http")
+
+@enduml
+
+
+
+   

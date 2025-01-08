@@ -1,0 +1,58 @@
+@startuml component
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+left to right direction
+
+Person(customer, "Customer")
+
+System_Boundary(k8s, "Kubernetes") {
+    System_Boundary(worker, "Worker") {
+        Component(kafka_listener, "TopicListener", "Kafka")
+        Component(database_manager, "DatabaseManager", "PostgreSQL")
+        Component(file_manager, "FileManager", "S3")
+        Component(voice, "VoiceCloner")
+        Component(main, "MainLoop")
+
+        Rel(main, kafka_listener, "Listens requests")
+        Rel(main, database_manager, "Updates requests' statuses")
+        Rel(main, file_manager, "Downloads and uploads voice files")
+        Rel(main, voice, "Clones voice using speaker voice")
+    }
+
+    System_Boundary(api, "API") {
+        rectangle "API Endpoint: /login" as login
+        rectangle "API Endpoint: /upload/wav" as upload_wav
+        rectangle "API Endpoint: /result/<request_id>" as result
+        rectangle "API Endpoint: /generate" as generate
+        rectangle "API Endpoint: /main" as mainAPI
+        rectangle "API Endpoint: /registration" as registration
+
+        Component(api_kafka_producer, "TopicProducer", "Kafka")
+    }
+}
+
+Component(database, "Database", "PostgreSQL", "Stores data about users, speakers and requests")
+Component(s3, "Object Storage", "S3", "Stores speakers' voices and synthesized voices")
+Component(kafka, "Topic", "Kafka", "Stores requests as a message queue")
+
+
+Rel(customer, mainAPI, "Watch their uploaded speaker voices")
+Rel(customer, login, "Logs in to the system system")
+Rel(customer, registration, "Register in the system")
+Rel(customer, result, "Checks if request is perfomed")
+Rel(customer, generate, "Creates a request to generate voice")
+Rel(customer, upload_wav, "Uploads speaker voice")
+
+Rel(database_manager, database, "Makes SQL queries")
+Rel(file_manager, s3, "S3 protocol")
+Rel(login, database, "Interacts for authentication and authorization")
+Rel(upload_wav, s3, "Uploads audio files")
+Rel(result, s3, "Checks status and Downloads synthesis results")
+Rel(generate, api_kafka_producer, "Publishes requests")
+Rel(generate, database, "Stores request data, status")
+Rel(mainAPI, database, "Gets all audio for the user")
+Rel(registration, database, "Handles new user registration")
+Rel(kafka_listener, kafka, "Waits for new requests")
+Rel(api_kafka_producer, kafka, "Puts new requests")
+
+@enduml

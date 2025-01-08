@@ -1,0 +1,18 @@
+@startuml system-context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+Person(customer, "Customer", "A customer who wants to synthesize voice")
+
+System(website, "Voice-Stealer Website", "Allows customers to upload speaker voice and synthesize using it")
+
+System(mainframe, "Voice-Stealer Mainframe", "Performs voice synthesis")
+
+Rel(customer, website, "Uploads speaker voice and get synthesized voice")
+
+Rel(website, mainframe, "Sends requests")
+
+@enduml
+
+
+
+   
