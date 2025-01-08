@@ -1,0 +1,1 @@
+ALTER TABLE IF EXISTS speakers ADD CONSTRAINT unique_user_speaker UNIQUE (name, user_id);
