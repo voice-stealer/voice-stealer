@@ -13,23 +13,32 @@ audio_prefix = "audio"
 
 logger = None
 
-db_password = os.environ["DB_PASSWORD"].strip()
-aws_secret_access_key = os.environ["AWS_SECRET_ACCESS_KEY"].strip()
+DB_HOST = os.environ['DB_HOST'].strip()
+DB_PORT = os.environ['DB_PORT'].strip()
+DB_NAME = os.environ['DB_NAME'].strip()
+DB_USER = os.environ['DB_USER'].strip()
+DB_PASSWORD = os.environ['DB_PASSWORD'].strip()
+
+KAFKA_HOST = os.environ['KAFKA_HOST'].strip()
+KAFKA_PORT = os.environ['KAFKA_PORT'].strip()
+
+S3_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID'].strip()
+S3_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY'].strip()
+
 hostname = os.getenv("HOSTNAME")
-kafka_ip = os.environ["KAFKA_IP"].strip()
 
 db_config = f"""
-    host=rc1a-2qr3lpuy4yr5p1cc.mdb.yandexcloud.net
-    port=6432
+    host={DB_HOST}
+    port={DB_PORT}
     sslmode=verify-full
-    dbname=preprod
-    user=voice-stealer-preprod
-    password={db_password}
+    dbname={DB_NAME}
+    user={DB_USER}
+    password={DB_PASSWORD}
     target_session_attrs=read-write
 """
 
 db = None
-s3 = FileManager({'aws_access_key_id': 'YCAJEFDI3ulOo8HCiAi2wPZSK', 'aws_secret_access_key': aws_secret_access_key})
+s3 = FileManager({'aws_access_key_id': S3_ACCESS_KEY_ID, 'aws_secret_access_key': S3_SECRET_ACCESS_KEY})
 vc = VoiceStealer()
 
 def clear_old_speaker_files():
@@ -89,7 +98,7 @@ def on_message_callback(msg):
 
 
 if __name__ == "__main__":
-    kafka = Kafka(f"{kafka_ip}:9092", "default", "earliest", on_message_callback=on_message_callback)
+    kafka = Kafka(f"{KAFKA_HOST}:{KAFKA_PORT}", "default", "earliest", on_message_callback=on_message_callback)
     logger = Logger(kafka).with_field("hostname", hostname)
     db = DatabaseManager(db_config, logger)
     logger.info("started")
