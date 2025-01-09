@@ -82,7 +82,7 @@ resource "kubernetes_deployment" "voice-stealer-k8s-api-deployment" {
 
           env {
             name = "DB_HOST"
-            value = var.database.host
+            value = yandex_mdb_postgresql_cluster.voice-stealer-pg.host[0].fqdn
           }
           env {
             name = "DB_PORT"
@@ -90,11 +90,11 @@ resource "kubernetes_deployment" "voice-stealer-k8s-api-deployment" {
           }
           env {
             name = "DB_NAME"
-            value = var.database.name
+            value = yandex_mdb_postgresql_database.preprod-db.name
           }
           env {
             name = "DB_USER"
-            value = var.database.user
+            value = yandex_mdb_postgresql_user.voice-stealer-preprod.name
           }
           env {
             name = "DB_PASSWORD"

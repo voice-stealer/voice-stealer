@@ -6,8 +6,5 @@ k8s-node-group = {
 }
 
 database = {
-  host = "rc1a-2qr3lpuy4yr5p1cc.mdb.yandexcloud.net"
   port = "6432"
-  name = "preprod"
-  user = "voice-stealer-preprod"
 }
