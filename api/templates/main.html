@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main Page</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</head>
+<body>
+    <div class="content-wrapper">
+        <div class="header">
+            <p>VoiceStealler</p>
+            <button id="logout-button" onclick="logout()">Logout</button>
+        </div>
+        <div class="content">
+            <div class="reverse">
+                <div class="chat-container" id="chat-container"></div>
+            </div>
+            <div class="input-container">
+                <textarea id="message-input" placeholder="Введите сообщение"></textarea>
+
+                <select id="audio-select">
+                    <option value="">Выберите голос</option>
+                    {% for file in audio_files %}
+                    <option value="{{ file }}">{{ file }}</option>
+                    {% endfor %}
+                </select>
+                <button onclick="sendMessage()">></button>
+            </div>
+            <div>
+                <div id="input-audio-container">
+                    <label class="input-file">
+                        <input id="file" type="file" name="file" onchange="changeUploadedFile(event)">
+	   	                <span> + Загрузить файл</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- <textarea id="textInput" rows="10" placeholder="Enter your text here..."></textarea>
+        <button onclick="postMessage()">Send</button> -->
+    </div>
+
+    <script>
+       function changeUploadedFile(event) {
+            if (event.target.files.length === 0 || !uploadFile()) {
+                return;
+            }
+            const file = event.target.files[0];
+            const span = event.target.nextElementSibling;
+            span.innerHTML = file.name;
+        }
+
+    </script>
+
+    <!-- <script>
+        function selectAudio(element) {
+            const allItems = document.querySelectorAll('#audioList li');
+            allItems.forEach(item => item.classList.remove('selected'));
+
+            element.classList.add('selected');
+        }
+    </script> -->
+
+
+
+    <script>
+        function sendMessage() {
+            const chatContainer = document.getElementById('chat-container');
+            const messageInput = document.getElementById('message-input');
+            const messageText = messageInput.value;
+            const audioSelect = document.getElementById('audio-select');
+
+
+            if (messageText.trim() !== "" && audioSelect.selectedIndex != 0) {
+                postMessage(messageText, audioSelect.value, messageInput, chatContainer)
+            } else {
+                if (messageText.trim() === "") {
+                    alert("пустой текст!");
+                } else {
+                    alert("голос не выбран!");
+                }
+            }
+        }
+    </script>
+
+</body>
+</html>
