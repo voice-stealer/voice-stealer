@@ -86,7 +86,7 @@ resource "kubernetes_deployment" "voice-stealer-k8s-api-deployment" {
           }
           env {
             name = "DB_PORT"
-            value = var.database.port
+            value = var.database_port
           }
           env {
             name = "DB_NAME"

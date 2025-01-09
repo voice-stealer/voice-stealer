@@ -27,13 +27,9 @@ variable "k8s-node-group" {
   })
 }
 
-variable "database" {
-  type = object({
-    host     = string
-    port     = string
-    name     = string
-    user     = string
-  })
+variable "database_port" {
+  type = string
+  default = "6432"
 }
 
 variable "kafka_port" {

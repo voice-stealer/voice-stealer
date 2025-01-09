@@ -4,7 +4,3 @@ k8s-node-group = {
   memory      = 8
   size        = 2
 }
-
-database = {
-  port = "6432"
-}
