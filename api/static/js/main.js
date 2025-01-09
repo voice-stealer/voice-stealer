@@ -4,7 +4,9 @@ function removeToken() { localStorage.removeItem('jwtToken'); }
 
 const kInProgress = 'in_progress';
 const kPending = 'pending';
-const kFetchTimer = 20 * 1000;
+const kDone = 'done';
+const kFailed = 'failed';
+const kFetchTimer = 5 * 1000;
 
 
 function login(username, password) {
@@ -24,12 +26,11 @@ function login(username, password) {
     })
     .then(data => {
         if (data) {
-            document.getElementById('message').innerText = data.message;
+            alert(data.message);
         }
     })
     .catch(error => {
         console.error('Error during login:', error);
-        document.getElementById('message').innerText = 'An error occurred during login.';
     });
 }
 
@@ -57,7 +58,36 @@ function logout() {
     })
     .catch(error => {
         console.error('Error during logout:', error);
-        document.getElementById('message').innerText = 'An error occurred during logout.';
+    });
+}
+
+function register(username, password1, password2) {
+    if (password1 !== password2) {
+        alert('Пароли не совпадают');
+        return;
+    }
+
+    fetch('/registration', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, password1, password2 })
+    })
+    .then(response => {
+        if (response.redirected) {
+            window.location.href = response.url;
+        } else {
+            return response.json();
+        }
+    })
+    .then(data => {
+        if (data) {
+            alert(data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error during registration:', error);
     });
 }
 
@@ -84,6 +114,7 @@ function postMessage(message, selected_audio, messageInput, chatContainer) {
         chatContainer.scrollTop = chatContainer.scrollHeight;
 
 
+        startLoading("Голос синтезируется...");
         checkTaskStatus(data.reqid);
     })
     .catch(error => console.error('Ошибка:', error));
@@ -94,7 +125,10 @@ function checkTaskStatus(taskId) {
     let isProcessing = false;
 
     const intervalId = setInterval(() => {
-        if (isProcessing) return;
+        if (isProcessing) {
+            stopLoading();
+            return;
+        };
 
         isProcessing = true;
 
@@ -105,13 +139,14 @@ function checkTaskStatus(taskId) {
                 if (contentType && contentType.includes("application/json")) {
                     return response.json().then(data => {
                         if (data.status !== kInProgress && data.status !== kPending) {
-                            console.log(data);
+                            alert("Во время выполнения запросы произошла ошибка. Попробуйте ещё раз");
+                            console.error(data);
                             clearInterval(intervalId);
-                            console.log('Error in server');
                         }
                         isProcessing = false;
                     }).catch(() => isProcessing = false);
                 } else if (contentType && contentType.includes("audio")) {
+                    stopLoading();
                     clearInterval(intervalId);
                     return response.blob().then(blob => {
                         sendAudio(chatContainer, blob);
@@ -130,20 +165,57 @@ function checkTaskStatus(taskId) {
     }, kFetchTimer);
 }
 
+// function sendAudio(chatContainer, audioBlob) {
+//     const botMessage = document.createElement('div');
+//     botMessage.className = 'message bot';
+
+
+//     const audioPlayer = document.createElement('audio');
+//     audioPlayer.controls = true;
+//     audioPlayer.src = URL.createObjectURL(audioBlob);
+//     botMessage.appendChild(audioPlayer);
+
+//     chatContainer.appendChild(botMessage);
+//     chatContainer.scrollTop = chatContainer.scrollHeight;
+// }
 function sendAudio(chatContainer, audioBlob) {
     const botMessage = document.createElement('div');
     botMessage.className = 'message bot';
-
 
     const audioPlayer = document.createElement('audio');
     audioPlayer.controls = true;
     audioPlayer.src = URL.createObjectURL(audioBlob);
     botMessage.appendChild(audioPlayer);
 
+    // Создаем контейнер для кнопок лайка и дизлайка
+    const feedbackContainer = document.createElement('div');
+    feedbackContainer.className = 'feedback';
+
+    // Создаем кнопку лайка
+    const likeButton = document.createElement('button');
+    likeButton.className = 'like-button';
+    likeButton.innerText = '👍';
+    likeButton.onclick = () => {
+        likeButton.classList.add('selected');
+        dislikeButton.disabled = true;
+    };
+    feedbackContainer.appendChild(likeButton);
+
+    // Создаем кнопку дизлайка
+    const dislikeButton = document.createElement('button');
+    dislikeButton.className = 'dislike-button';
+    dislikeButton.innerText = '👎';
+    dislikeButton.onclick = () => {
+        dislikeButton.classList.add('selected');
+        likeButton.disabled = true;
+    };
+    feedbackContainer.appendChild(dislikeButton);
+
+    botMessage.appendChild(feedbackContainer);
+
     chatContainer.appendChild(botMessage);
     chatContainer.scrollTop = chatContainer.scrollHeight;
 }
-
 
 function uploadFile() {
     const fileInput = document.getElementById('file');
@@ -165,6 +237,7 @@ function uploadFile() {
         alert('Please select a valid WAV file that is less than 500MB.');
         return false;
     }
+    startLoading("Подождите, файл загружается...");
 
 
     const formData = new FormData();
@@ -185,11 +258,14 @@ function uploadFile() {
         const audioSelect = document.getElementById('audio-select');
         audioSelect.appendChild(document.createElement('option'));
         audioSelect.lastChild.textContent = file.name;
+        stopLoading();
+        alert('Файл успешно загружен.');
         return true;
     })
     .catch(error => {
+        stopLoading();
         console.error('Error:', error);
-        alert('Error uploading file.');
+        alert('Ошибка загрузки файла.');
         return false;
     });
 }
@@ -233,3 +309,17 @@ function uploadFile() {
 //         alert('Error retrieving the audio file.');
 //     });
 // }
+
+
+
+function startLoading(msg) {
+    const load = document.getElementById('loadingOverlay');
+    load.getElementsByClassName('loading-text')[0].textContent = msg;
+    load.style.display = 'flex'
+}
+
+function stopLoading() {
+    const load = document.getElementById('loadingOverlay');
+    load.style.display = 'none';
+    load.getElementsByClassName('loading-text')[0].textContent = "";
+}

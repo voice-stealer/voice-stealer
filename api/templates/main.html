@@ -9,6 +9,12 @@
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </head>
 <body>
+    <div id="loadingOverlay" style="display: none;">
+        <div class="spinner"></div>
+        <div class="loading-text"></div>
+    </div>
+
+
     <div class="content-wrapper">
         <div class="header">
             <p>VoiceStealler</p>
@@ -33,7 +39,7 @@
                 <div id="input-audio-container">
                     <label class="input-file">
                         <input id="file" type="file" name="file" onchange="changeUploadedFile(event)">
-	   	                <span> + Загрузить файл</span>
+	   	                <span> + Загрузить голос</span>
                     </label>
                 </div>
             </div>
