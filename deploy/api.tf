@@ -35,7 +35,7 @@ resource "kubernetes_deployment" "voice-stealer-k8s-api-deployment" {
   }
 
   spec {
-    replicas = 1
+    replicas = 2
 
     selector {
       match_labels = {

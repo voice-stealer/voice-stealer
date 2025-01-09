@@ -80,12 +80,6 @@ resource "kubernetes_manifest" "kafka_cluster" {
             "port" = 9093
             "type" = "internal"
             "tls"  = false
-          },
-          {
-            "name" = "external"
-            "port" = 9094
-            "type" = "loadbalancer"
-            "tls"  = false
           }
         ]
 
