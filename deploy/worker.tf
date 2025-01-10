@@ -34,7 +34,7 @@ resource "kubernetes_deployment" "voice-stealer-k8s-worker-deployment" {
       spec {
         container {
           name              = "worker"
-          image             = "cr.yandex/crpaemusgnfa4grmr44a:worker"
+          image             = "cr.yandex/crpaemusgnfa4grmr44a:worker-20250110-1223"
           image_pull_policy = "Always"
 
           command = [

@@ -56,7 +56,7 @@ resource "kubernetes_deployment" "voice-stealer-k8s-api-deployment" {
       spec {
         container {
           name              = "api"
-          image             = "cr.yandex/crpaemusgnfa4grmr44a:api-202501100630"
+          image             = "cr.yandex/crpaemusgnfa4grmr44a:api-20250110-0737"
           image_pull_policy = "Always"
 
           command = [

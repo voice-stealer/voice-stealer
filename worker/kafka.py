@@ -9,6 +9,7 @@ class Kafka:
             'bootstrap.servers': endpoint,
             'group.id': group_id,
             'auto.offset.reset': offset,
+            'max.poll.interval.ms': 30000000,
         })
         self.producer = Producer({
             'bootstrap.servers': endpoint,

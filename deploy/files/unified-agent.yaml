@@ -33,7 +33,7 @@ routes:
         url: http://${host}:2112/metrics
         format:
           prometheus: {}
-        namespace: worker
+        namespace: "worker-${host}"
     channel:
       channel_ref:
         name: cloud_monitoring
@@ -46,7 +46,7 @@ routes:
         url: http://${host}:2112/metrics
         format:
           prometheus: {}
-        namespace: api
+        namespace: "api-{host}"
     channel:
       channel_ref:
         name: cloud_monitoring
