@@ -13,6 +13,7 @@ from file_manager import FileManager
 from auth_manager import AuthManager, TokenManager
 from request_manager import RequestManager
 from db_manager import DatabaseManager
+from metrics import requests, serve
 
 import os
 
@@ -67,6 +68,7 @@ work_manager = WorkManager(kafka_conf, db_manager)
 # Login and get JWT token
 @app.route('/login', methods=['POST'])
 def login():
+    requests.labels(handler="login").inc()
     auth = request.get_json()
     if not auth or not auth.get('username') or not auth.get('password'):
         return jsonify({'message': 'Could not verify', 'WWW-Authenticate': 'Basic auth="Login required"'}), 401
@@ -85,6 +87,7 @@ def login():
 
 @app.route('/registration', methods=['POST'])
 def registration():
+    requests.labels(handler="registration").inc()
     reg = request.get_json()
     username = reg.get('username')
     password1 = reg.get('password1')
@@ -108,6 +111,7 @@ def registration():
 @app.route('/upload/wav', methods=['POST'])
 @token_manager.token_required
 def upload_wav(username):
+    requests.labels(handler="upload_wav").inc()
     if 'file' not in request.files:
         return jsonify({'message': 'No file part'}), 400
 
@@ -131,6 +135,7 @@ def upload_wav(username):
 # @app.route('/get/wav/<filename>', methods=['GET'])
 # @token_manager.token_required
 # def get_wav(username, filename):
+#     requests.labels(handler="get_wav").inc()
 #     try:
 #         if not filename.endswith('.wav'):
 #             return jsonify({'message': 'Invalid file type requested'}), 400
@@ -144,6 +149,7 @@ def upload_wav(username):
 @app.route('/result/<request_id>', methods=['GET'])
 @token_manager.token_required
 def get_result(username, request_id):
+    requests.labels(handler="result").inc()
     # Fetch request status from DB, check if it is 'done'
     status = db_manager.fetch_status(request_id)
     if status == 'done':
@@ -157,6 +163,7 @@ def get_result(username, request_id):
 @request_manager.generate_request_id
 @token_manager.token_required
 def generate_audio(username, request_id):
+    requests.labels(handler="generate").inc()
     data = request.get_json()
     message = data.get("message")
     selected_audio = data.get("selected_audio")
@@ -173,12 +180,14 @@ def generate_audio(username, request_id):
 @app.route('/')
 @app.route('/index.html')
 def index():
+    requests.labels(handler="index").inc()
     return render_template('login.html')
 
 
 @app.route('/main')
 @token_manager.token_required
 def main(username):
+    requests.labels(handler="main").inc()
     speakers = db_manager.fetch_speakers_for_user_by_name(username)
     return render_template('main.html', audio_files=speakers)
 
@@ -186,12 +195,14 @@ def main(username):
 @app.route('/logout')
 @token_manager.token_required
 def logout(username):
+    requests.labels(handler="logout").inc()
     response = make_response(redirect(url_for('index')))
     response.set_cookie('token', '', expires=0)
     return response
 
 
 if __name__ == '__main__':
-    app.run(debug=False, port=5000, host='0.0.0.0',
-            #ssl_context=('/etc/api-certificate/certificate.crt', '/etc/api-certificate-key/certificate.key')
+    serve("0.0.0.0", 2112)
+    app.run(debug=False, port=443, host='0.0.0.0',
+            ssl_context=('/etc/api-certificate/certificate.crt', '/etc/api-certificate-key/certificate.key')
         )
