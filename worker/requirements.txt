@@ -2,3 +2,4 @@ boto3==1.34.126
 confluent_kafka==2.6.1
 coqui_tts==0.24.3
 psycopg2_binary==2.9.9
+prometheus_client==0.20.0

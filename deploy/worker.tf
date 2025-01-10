@@ -13,7 +13,7 @@ resource "kubernetes_deployment" "voice-stealer-k8s-worker-deployment" {
   }
 
   spec {
-    replicas = 1
+    replicas = 2
 
     selector {
       match_labels = {
@@ -48,20 +48,24 @@ resource "kubernetes_deployment" "voice-stealer-k8s-worker-deployment" {
             }
           }
 
+          port {
+            container_port = 2112
+          }
+
           env {
-            name = "DB_HOST"
+            name  = "DB_HOST"
             value = yandex_mdb_postgresql_cluster.voice-stealer-pg.host[0].fqdn
           }
           env {
-            name = "DB_PORT"
+            name  = "DB_PORT"
             value = var.database_port
           }
           env {
-            name = "DB_NAME"
+            name  = "DB_NAME"
             value = yandex_mdb_postgresql_database.preprod-db.name
           }
           env {
-            name = "DB_USER"
+            name  = "DB_USER"
             value = yandex_mdb_postgresql_user.voice-stealer-preprod.name
           }
           env {
@@ -75,7 +79,7 @@ resource "kubernetes_deployment" "voice-stealer-k8s-worker-deployment" {
           }
 
           env {
-            name = "AWS_ACCESS_KEY_ID"
+            name  = "AWS_ACCESS_KEY_ID"
             value = var.aws_key_id
           }
           env {
@@ -93,7 +97,7 @@ resource "kubernetes_deployment" "voice-stealer-k8s-worker-deployment" {
             value = data.kubernetes_service.kafka_bootstrap.spec[0].cluster_ip
           }
           env {
-            name = "KAFKA_PORT"
+            name  = "KAFKA_PORT"
             value = var.kafka_port
           }
 
@@ -101,4 +105,20 @@ resource "kubernetes_deployment" "voice-stealer-k8s-worker-deployment" {
       }
     }
   }
+}
+
+data "external" "get_worker_pod_ips" {
+  program = [
+    "bash", "-c", <<EOF
+    kubectl -n preprod get pods -l name=worker -o jsonpath='{.items[*].status.podIP}' | jq -R '{ips: .}'
+    EOF
+  ]
+}
+
+locals {
+  worker_pod_ips = split(" ", data.external.get_worker_pod_ips.result["ips"])
+}
+
+output "worker_pod_ips_list" {
+  value = local.worker_pod_ips
 }

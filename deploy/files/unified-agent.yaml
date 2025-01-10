@@ -1,0 +1,66 @@
+status:
+  host: "0.0.0.0"
+  port: "16241"
+
+storages:
+  - name: main
+    plugin: fs
+    config:
+      directory: /var/lib/yandex/unified_agent/main
+      max_partition_size: 100mb
+      max_segment_size: 10mb
+
+channels:
+  - name: cloud_monitoring
+    channel:
+      pipe:
+        - storage_ref:
+            name: main
+      output:
+        plugin: yc_metrics
+        config:
+          folder_id: "b1gt1qbgn0d2dvur1fes"
+          iam:
+            jwt:
+                file: "/etc/jwt/jwt_params.json"
+
+
+routes:
+%{ for host in worker_hosts ~}
+  - input:
+      plugin: metrics_pull
+      config:
+        url: http://${host}:2112/metrics
+        format:
+          prometheus: {}
+        namespace: worker
+    channel:
+      channel_ref:
+        name: cloud_monitoring
+%{endfor ~}
+
+%{ for host in api_hosts ~}
+  - input:
+      plugin: metrics_pull
+      config:
+        url: http://${host}:2112/metrics
+        format:
+          prometheus: {}
+        namespace: api
+    channel:
+      channel_ref:
+        name: cloud_monitoring
+%{endfor ~}
+
+  - input:
+      plugin: agent_metrics
+      config:
+        namespace: ua
+    channel:
+      pipe:
+        - filter:
+            plugin: filter_metrics
+            config:
+              match: "{scope=health}"
+      channel_ref:
+        name: cloud_monitoring

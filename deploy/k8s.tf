@@ -66,3 +66,16 @@ resource "kubernetes_namespace" "preprod-namespace" {
     name = "preprod"
   }
 }
+
+resource "kubernetes_secret" "unified-agent-config" {
+  metadata {
+    name      = "ua-config"
+    namespace = "preprod"
+  }
+  data = {
+    config = templatefile("${path.module}/files/unified-agent.yaml", {
+      worker_hosts = local.worker_pod_ips
+      api_hosts    = local.api_pod_ips
+    })
+  }
+}

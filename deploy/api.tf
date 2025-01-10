@@ -56,13 +56,17 @@ resource "kubernetes_deployment" "voice-stealer-k8s-api-deployment" {
       spec {
         container {
           name              = "api"
-          image             = "cr.yandex/crpaemusgnfa4grmr44a:api"
+          image             = "cr.yandex/crpaemusgnfa4grmr44a:api-202501100630"
           image_pull_policy = "Always"
 
           command = [
             "python",
             "main.py"
           ]
+
+          port {
+            container_port = 2112
+          }
 
           resources {
             limits = {
@@ -81,19 +85,19 @@ resource "kubernetes_deployment" "voice-stealer-k8s-api-deployment" {
           }
 
           env {
-            name = "DB_HOST"
+            name  = "DB_HOST"
             value = yandex_mdb_postgresql_cluster.voice-stealer-pg.host[0].fqdn
           }
           env {
-            name = "DB_PORT"
+            name  = "DB_PORT"
             value = var.database_port
           }
           env {
-            name = "DB_NAME"
+            name  = "DB_NAME"
             value = yandex_mdb_postgresql_database.preprod-db.name
           }
           env {
-            name = "DB_USER"
+            name  = "DB_USER"
             value = yandex_mdb_postgresql_user.voice-stealer-preprod.name
           }
           env {
@@ -107,7 +111,7 @@ resource "kubernetes_deployment" "voice-stealer-k8s-api-deployment" {
           }
 
           env {
-            name = "AWS_ACCESS_KEY_ID"
+            name  = "AWS_ACCESS_KEY_ID"
             value = var.aws_key_id
           }
           env {
@@ -125,20 +129,20 @@ resource "kubernetes_deployment" "voice-stealer-k8s-api-deployment" {
             value = data.kubernetes_service.kafka_bootstrap.spec[0].cluster_ip
           }
           env {
-            name = "KAFKA_PORT"
+            name  = "KAFKA_PORT"
             value = var.kafka_port
           }
 
           volume_mount {
             mount_path = "/etc/api-certificate"
             name       = "api-cert"
-            read_only = true
+            read_only  = true
           }
 
           volume_mount {
             mount_path = "/etc/api-certificate-key"
             name       = "api-cert-key"
-            read_only = true
+            read_only  = true
           }
         }
 
@@ -147,7 +151,7 @@ resource "kubernetes_deployment" "voice-stealer-k8s-api-deployment" {
           secret {
             secret_name = "api-cert-certificate"
             items {
-              key = "cert"
+              key  = "cert"
               path = "certificate.crt"
             }
           }
@@ -158,7 +162,7 @@ resource "kubernetes_deployment" "voice-stealer-k8s-api-deployment" {
           secret {
             secret_name = "api-cert-key"
             items {
-              key = "key"
+              key  = "key"
               path = "certificate.key"
             }
           }
@@ -166,4 +170,21 @@ resource "kubernetes_deployment" "voice-stealer-k8s-api-deployment" {
       }
     }
   }
+}
+
+
+data "external" "get_api_pod_ips" {
+  program = [
+    "bash", "-c", <<EOF
+    kubectl -n preprod get pods -l name=api -o jsonpath='{.items[*].status.podIP}' | jq -R '{ips: .}'
+    EOF
+  ]
+}
+
+locals {
+  api_pod_ips = split(" ", data.external.get_api_pod_ips.result["ips"])
+}
+
+output "api_pod_ips_list" {
+  value = local.api_pod_ips
 }

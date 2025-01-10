@@ -7,6 +7,7 @@ from kafka import Kafka
 from s3 import FileManager
 from tts import VoiceStealer
 from logger import Logger
+from metrics import serve
 import os
 
 audio_prefix = "audio"
@@ -98,6 +99,7 @@ def on_message_callback(msg):
 
 
 if __name__ == "__main__":
+    serve("0.0.0.0", 2112)
     kafka = Kafka(f"{KAFKA_HOST}:{KAFKA_PORT}", "default", "earliest", on_message_callback=on_message_callback)
     logger = Logger(kafka).with_field("hostname", hostname)
     db = DatabaseManager(db_config, logger)
