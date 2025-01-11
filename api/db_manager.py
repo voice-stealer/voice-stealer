@@ -105,6 +105,25 @@ class DatabaseManager:
             self.disconnect()
             return None
 
+
+    def set_feedback(self, request_id, like):
+        self.connect()
+        """Set feedback for a given task"""
+        feedback_value = 'like' if like else 'dislike'
+        try:
+            with self.connection.cursor(cursor_factory=RealDictCursor) as cursor:
+                cursor.execute(
+                    "UPDATE requests SET feedback = %s WHERE id = %s",
+                    (feedback_value, request_id)
+                )
+                self.connection.commit()
+            self.disconnect()
+        except Exception as error:
+            print(f"Error settin feedback: {error}")
+            self.disconnect()
+            return None
+
+
     def fetch_tasks(self, user_id):
         self.connect()
         """Fetch all tasks and their statuses for a given user"""
