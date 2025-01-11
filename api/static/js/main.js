@@ -226,7 +226,8 @@ function sendReaction(like) {
     fetch('/feedback', {
         method: 'POST',
         headers: {
-            'x-access-tokens': getToken()
+            'x-access-tokens': getToken(),
+            'Content-Type': 'application/json'
         },
         body: JSON.stringify({like, taskId})
     })

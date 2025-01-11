@@ -13,11 +13,10 @@ from file_manager import FileManager
 from auth_manager import AuthManager, TokenManager
 from request_manager import RequestManager
 from db_manager import DatabaseManager
-from metrics import requests, serve
+from metrics import requests, user_feedback, serve
 
 import os
 
-serve("0.0.0.0", 2112)
 
 class Config:
     SECRET_KEY = os.environ['SECRET_KEY'].strip()
@@ -169,8 +168,14 @@ def set_feedback(username):
     like = data.get("like")
     request_id = data.get("taskId")
 
-    if like and request_id:
+    if like is not None and request_id:
         print(like, request_id)
+
+        if like:
+            user_feedback.labels(verdict="like").inc(1.0)
+        else:
+            user_feedback.labels(verdict="dislike").inc(1.0)
+
         db_manager.set_feedback(request_id, like)
         return jsonify({'reqid': request_id}), 200
     return jsonify({'message': 'No reaction or task id provided'}), 400
@@ -221,7 +226,7 @@ def logout(username):
 
 
 if __name__ == '__main__':
-    pass
-    # app.run(debug=False, port=443, host='0.0.0.0',
-    #         ssl_context=('/etc/api-certificate/certificate.crt', '/etc/api-certificate-key/certificate.key')
-    #     )
+    serve("0.0.0.0", 2112)
+    app.run(debug=False, port=443, host='0.0.0.0',
+            ssl_context=('/etc/api-certificate/certificate.crt', '/etc/api-certificate-key/certificate.key')
+        )
