@@ -13,6 +13,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-CMD ["gunicorn", "--bind", "0.0.0.0:443", "main:app", "-w", "4"]
+CMD ["gunicorn", "--bind", "0.0.0.0:443", "main:app", "--certfile=/etc/api-certificate/certificate.crt", "--keyfile=/etc/api-certificate-key/certificate.key"]
 
 # CMD ["python", "main.py"]

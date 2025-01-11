@@ -17,6 +17,7 @@ from metrics import requests, serve
 
 import os
 
+serve("0.0.0.0", 2112)
 
 class Config:
     SECRET_KEY = os.environ['SECRET_KEY'].strip()
@@ -220,7 +221,7 @@ def logout(username):
 
 
 if __name__ == '__main__':
-    serve("0.0.0.0", 2112)
-    app.run(debug=False, port=443, host='0.0.0.0',
-            ssl_context=('/etc/api-certificate/certificate.crt', '/etc/api-certificate-key/certificate.key')
-        )
+    pass
+    # app.run(debug=False, port=443, host='0.0.0.0',
+    #         ssl_context=('/etc/api-certificate/certificate.crt', '/etc/api-certificate-key/certificate.key')
+    #     )
