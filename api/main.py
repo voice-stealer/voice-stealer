@@ -156,6 +156,24 @@ def get_result(username, request_id):
         return file_manager.get_file(f"{request_id}.wav")
     return jsonify({'status': status}), 200
 
+@app.route('/feedback', methods=['POST'])
+@token_manager.token_required
+def set_feedback(username):
+    requests.labels(handler="feedback").inc()
+    data = request.get_json()
+
+    if not data:
+        return jsonify({'message': 'No reaction and task id provided'}), 400
+
+    like = data.get("like")
+    request_id = data.get("taskId")
+
+    if like and request_id:
+        print(like, request_id)
+        db_manager.set_feedback(request_id, like)
+        return jsonify({'reqid': request_id}), 200
+    return jsonify({'message': 'No reaction or task id provided'}), 400
+
 
 
 # POST method to receive and print message
