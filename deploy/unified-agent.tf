@@ -2,6 +2,7 @@ resource "kubernetes_deployment" "voice-stealer-k8s-unified-agent-deployment" {
   depends_on = [
     yandex_kubernetes_cluster.voice-stealer,
     yandex_kubernetes_node_group.voice-stealer-k8s-node-group,
+    kubernetes_secret.unified-agent-config,
   ]
 
   metadata {
