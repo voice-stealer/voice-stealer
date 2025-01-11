@@ -149,7 +149,7 @@ function checkTaskStatus(taskId) {
                     stopLoading();
                     clearInterval(intervalId);
                     return response.blob().then(blob => {
-                        sendAudio(chatContainer, blob);
+                        sendAudio(chatContainer, blob, taskId);
                         isProcessing = false;
                     }).catch(() => isProcessing = false);
                 } else {
@@ -178,7 +178,7 @@ function checkTaskStatus(taskId) {
 //     chatContainer.appendChild(botMessage);
 //     chatContainer.scrollTop = chatContainer.scrollHeight;
 // }
-function sendAudio(chatContainer, audioBlob) {
+function sendAudio(chatContainer, audioBlob, taskId) {
     const botMessage = document.createElement('div');
     botMessage.className = 'message bot';
 
@@ -190,6 +190,8 @@ function sendAudio(chatContainer, audioBlob) {
     // Создаем контейнер для кнопок лайка и дизлайка
     const feedbackContainer = document.createElement('div');
     feedbackContainer.className = 'feedback';
+    feedbackContainer.id = 'feedback';
+    feedbackContainer.name = `${taskId}`;
 
     // Создаем кнопку лайка
     const likeButton = document.createElement('button');
@@ -198,6 +200,7 @@ function sendAudio(chatContainer, audioBlob) {
     likeButton.onclick = () => {
         likeButton.classList.add('selected');
         dislikeButton.disabled = true;
+        sendReaction(true);
     };
     feedbackContainer.appendChild(likeButton);
 
@@ -208,6 +211,7 @@ function sendAudio(chatContainer, audioBlob) {
     dislikeButton.onclick = () => {
         dislikeButton.classList.add('selected');
         likeButton.disabled = true;
+        sendReaction(false);
     };
     feedbackContainer.appendChild(dislikeButton);
 
@@ -215,6 +219,24 @@ function sendAudio(chatContainer, audioBlob) {
 
     chatContainer.appendChild(botMessage);
     chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+function sendReaction(like) {
+    const taskId = document.getElementById('feedback').name;
+    fetch('/feedback', {
+        method: 'POST',
+        headers: {
+            'x-access-tokens': getToken()
+        },
+        body: JSON.stringify({like, taskId})
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log(JSON.stringify(data));
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
 }
 
 function uploadFile() {
@@ -229,7 +251,8 @@ function uploadFile() {
         alert('Select a file to upload.');
         return false;
     }
-    if (file.type !== 'audio/wav') {
+    const acceptedMimeTypes = ['audio/wav', 'audio/x-wav', 'audio/wave', 'audio/vnd.wave'];
+    if (!acceptedMimeTypes.includes(file.type)) {
         alert('Please select a valid WAV file.');
         return false;
     }
