@@ -94,6 +94,10 @@ function register(username, password1, password2) {
 
 function postMessage(message, selected_audio, messageInput, chatContainer) {
     console.log(message, selected_audio);
+    if (message.length > 300) {
+        alert("Вводите сообщения до 300 символов");
+        return;
+    }
 
 
     fetch('/generate', {
@@ -139,6 +143,7 @@ function checkTaskStatus(taskId) {
                 if (contentType && contentType.includes("application/json")) {
                     return response.json().then(data => {
                         if (data.status !== kInProgress && data.status !== kPending) {
+                            stopLoading();
                             alert("Во время выполнения запросы произошла ошибка. Попробуйте ещё раз");
                             console.error(data);
                             clearInterval(intervalId);
@@ -153,12 +158,14 @@ function checkTaskStatus(taskId) {
                         isProcessing = false;
                     }).catch(() => isProcessing = false);
                 } else {
+                    stopLoading();
                     return response.text().finally(() => {
                         isProcessing = false;
                     });
                 }
             })
             .catch(error => {
+                stopLoading();
                 console.error('Ошибка:', error);
                 isProcessing = false;
             });
@@ -190,8 +197,9 @@ function sendAudio(chatContainer, audioBlob, taskId) {
     // Создаем контейнер для кнопок лайка и дизлайка
     const feedbackContainer = document.createElement('div');
     feedbackContainer.className = 'feedback';
-    feedbackContainer.id = 'feedback';
-    feedbackContainer.name = `${taskId}`;
+    feedbackContainer.name = 'feedback-container';
+    feedbackContainer.setAttribute('data-request-id', `${taskId}`);
+
 
     // Создаем кнопку лайка
     const likeButton = document.createElement('button');
@@ -222,7 +230,9 @@ function sendAudio(chatContainer, audioBlob, taskId) {
 }
 
 function sendReaction(like) {
-    const taskId = document.getElementById('feedback').name;
+    const feedbackContainers = document.querySelectorAll('div[name="feedback-container"]');
+    const lastContainer = feedbackContainers[feedbackContainers.length - 1];
+    const taskId = lastContainer.getAttribute('data-request-id');
     fetch('/feedback', {
         method: 'POST',
         headers: {
