@@ -20,7 +20,7 @@ class AuthManager:
     def generate_token(self, username):
         return jwt.encode({
             'username': username,
-            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=60)
+            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=1440)
         }, self.auth_config['SECRET_KEY'])
 
     def register(self, username, password):
